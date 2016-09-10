@@ -14,7 +14,7 @@ It will scan fotos for the EXIF date and create subfolders YYYY-MM-DD and move t
 
 Same goes for videos. Meta info is being scanned and 'cration_date' is searched for via regex.
 
-As this might differ for your video files, adjustmenst might be needed.
+As this might differ for your video files, adjustments might be needed.
 
 Therefore a 'checkmode' can be activated to see just the video metadata output so that the regex can (hopefully) easily be adjusted.
 
