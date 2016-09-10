@@ -10,7 +10,7 @@ So this will help you hopefully as much as it helped me.
 
 Just throw your media files into a folder and drop this folder onto the script.
 
-I will scan fotos for the EXIF date and create subfolders YYYY-MM-DD and move the fotos there.
+It will scan fotos for the EXIF date and create subfolders YYYY-MM-DD and move the fotos there.
 
 Same goes for videos. Meta info is being scanned and 'cration_date' is searched for via regex.
 
