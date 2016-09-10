@@ -36,12 +36,12 @@ CHECKMODE = False #if True: skips foto processing; switches to video and outputs
 # FUNCTIONS
 def init():
     if len(sys.argv)> 2:
-        input('Drop only on folder at a time!')
+        input('Drop only one folder at a time!\nhit <enter>')
         quit()
 
     path=(str(sys.argv[1]))
     if not os.path.isdir(path):
-        input('must be a folder not a file!')
+        input('Must be a folder not a file!\nhit <enter>')
         quit()
 
     print('\nFireing up on...')
