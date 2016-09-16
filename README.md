@@ -19,3 +19,5 @@ As this might differ for your video files, adjustments might be needed.
 Therefore a 'checkmode' can be activated to see just the video metadata output so that the regex can (hopefully) easily be adjusted.
 
 Have fun!
+
+-> You will need to download and install FFMPEG as well as the python module ExifRead to get the code running <-
