@@ -1,9 +1,9 @@
 ##########################################
 # WHAT THIS IS FOR
 
-# Drop a folder containing fotos and videos onto this script
+# Drop a folder containing fotos and  onto this script
 # and it will try to create subfolders with the date of the
-# fotos/videos and move them to these subfolders
+# fotos/ and move them to these subfolders
 
 # folder naming scheme is YYYY-MM-DD
 
@@ -36,20 +36,26 @@ except Exception as err:
 
 
 # GLOBALS
-folderList = []
+folder_list = []
 FFPROBE_BIN = "ffprobe.exe"  # on Windows
-extensions = ["jpg", "mp4"]  # what extensions to search for in the dropped folder
-fotos = [
+PIC_EXTS = [
     "tif",
     "jpg",
     "raw",
 ]  # list of foto file formats - can be extended for future use
-videos = [
+VIDEO_EXTS = [
     "avi",
     "mp4",
     "mov",
 ]  # same for video to let the program know what is video or foto
 CHECKMODE = False  # if True: skips foto processing; switches to video and outputs results of ffprobe for debugging
+
+SCHEMAS = {
+    "YMD": [
+        r"threema-(\d{4})(\d{2})(\d{2})",
+    ],
+    "DMY": [],
+}
 
 # FUNCTIONS
 def init() -> Optional[str]:
@@ -70,8 +76,8 @@ def init() -> Optional[str]:
     return path_str
 
 
-def videoDate(fileName: str) -> Optional[str]:
-    command = [FFPROBE_BIN, fileName]
+def videoDate(file_name: str) -> Optional[str]:
+    command = [FFPROBE_BIN, file_name]
     try:
         info = sp.getoutput(command)
     except sp.CalledProcessError as err:
@@ -84,7 +90,7 @@ def videoDate(fileName: str) -> Optional[str]:
     if CHECKMODE == True:
         os.system("cls")  # for Windows
         # os.system('clear')  # for Linux/OS X
-        print(fileName, "\n\n")
+        print(file_name, "\n\n")
         print(info, "\n")
         m = re.search("creation_time.*?(\d{4}-\d{2}-\d{2})", info)
         if m:
@@ -98,49 +104,59 @@ def videoDate(fileName: str) -> Optional[str]:
     m = re.search("creation_time.*?(\d{4}-\d{2}-\d{2})", info)
     if m:
         return str(m.group(1))
-    else:
-        return None
+
+    return _regex_search(file_name)
 
 
-def fotoDate(fileName: str) -> Optional[str]:
-    with open(fileName, "rb") as f_handle:
-        tags = exifread.process_file(f_handle, stop_tag="EXIF DateTimeOriginal")
+def _dt_string_from_exif(creation_dt) -> str:
+    creation_dt = str(creation_dt)
+    year = creation_dt[:4]
+    month = creation_dt[5:7]
+    day = creation_dt[8:10]
+    return f"{year}-{month}-{day}"
 
-    creationDateTime = None
+
+def _regex_search(file_name: str) -> Optional[str]:
+    for dt_fmt, schemas in SCHEMAS.items():
+        for schema in schemas:
+            if _match := re.search(schema, file_name):
+                if dt_fmt == "YMD":
+                    return f"{_match[1]}-{_match[2]}-{_match[3]}"
+                elif dt_fmt == "DMY":
+                    return f"{_match[3]}-{_match[2]}-{_match[1]}"
+
+
+def fotoDate(file_name: str) -> Optional[str]:
+    with open(file_name, "rb") as f_handle:
+        tags = exifread.process_file(f_handle)
+
     try:
-        creationDateTime = tags["EXIF DateTimeOriginal"]
+        creation_dt = tags["EXIF DateTimeOriginal"]
     except KeyError:
-        try:
-            with open(fileName, "rb") as f_handle:
-                tags = exifread.process_file(f_handle)
-            creationDateTime = tags["Image DateTime"]
-        except KeyError:
-            if tags:
-                print(f"[!] no suitable tags in <{fileName}>")
-                for k, v in tags:
-                    print(f"{k}: {v}")
-                input()
-            else:
-                print(f"[!] tags empty in <{fileName}>")
+        pass
+    else:
+        return _dt_string_from_exif(creation_dt)
 
-    if creationDateTime:
-        creationDateTime = str(creationDateTime)
-        year = creationDateTime[:4]
-        month = creationDateTime[5:7]
-        day = creationDateTime[8:10]
-        creationDateTime = str(year + "-" + month + "-" + day)
+    try:
+        creation_dt = tags["Image DateTime"]
+    except KeyError:
+        pass
+    else:
+        return _dt_string_from_exif(creation_dt)
 
-    return creationDateTime
+    # print(f"[!] regex fallback for <{file_name}>")
+    # try regex
+    return _regex_search(file_name)
 
 
 def folders(date):
-    if date in folderList:
+    if date in folder_list:
         return
     elif os.path.isdir(date):
         return
     else:
         os.makedirs(date)
-        folderList.append(date)
+        folder_list.append(date)
 
 
 # MAIN
@@ -163,20 +179,19 @@ if __name__ == "__main__":
     if CHECKMODE == False:
         print("\nprocessing EXIF\n")
 
+    extensions = [*PIC_EXTS, *VIDEO_EXTS]
     for extension in extensions:
         date = 0
-        counter = 0
-        extension = "*." + extension
-        fileList = glob(extension)
-        filesTotal = len(fileList)
-        print("\n\n", filesTotal, "files for extension", extension)
-        for file in fileList:
-            counter += 1
-            progress = 100 * counter / filesTotal
+        extension = f"*.{extension}"
+        file_list = glob(extension)
+        files_total = len(file_list)
+        print("\n\n", files_total, "files for extension", extension)
+        for counter, file in enumerate(file_list, start=1):
+            progress = 100 * counter / files_total
 
-            if extension[2:] in fotos and CHECKMODE == False:
+            if extension[2:] in PIC_EXTS and CHECKMODE == False:
                 date = fotoDate(file)
-            elif extension[2:] in videos:
+            elif extension[2:] in VIDEO_EXTS:
                 date = videoDate(file)
 
             if date and CHECKMODE == False:
