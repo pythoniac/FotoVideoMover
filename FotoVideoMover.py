@@ -115,10 +115,14 @@ def fotoDate(fileName: str) -> Optional[str]:
                 tags = exifread.process_file(f_handle)
             creationDateTime = tags["Image DateTime"]
         except KeyError:
-            for k, v in tags:
-                print(f"{k}: {v}")
-            input()
-            
+            if tags:
+                print(f"[!] no suitable tags in <{fileName}>")
+                for k, v in tags:
+                    print(f"{k}: {v}")
+                input()
+            else:
+                print(f"[!] tags empty in <{fileName}>")
+
     if creationDateTime:
         creationDateTime = str(creationDateTime)
         year = creationDateTime[:4]
