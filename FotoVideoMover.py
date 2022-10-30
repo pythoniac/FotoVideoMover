@@ -21,9 +21,18 @@
 ##########################################
 
 # IMPORTS
-import os, sys, re, exifread, shutil
+import os, sys, re, shutil
 from glob import glob
 import subprocess as sp
+
+try:
+    import exifread
+except Exception as e:
+    print('Import error: '+ str(e))
+    print('please do ''pip install exifread''')
+    input('<return>')
+    sys.exit(0)
+
 
 # GLOBALS
 folderList =[]
@@ -38,6 +47,9 @@ def init():
     if len(sys.argv)> 2:
         input('Drop only one folder at a time!\nhit <enter>')
         quit()
+    elif len(sys.argv) == 1:
+        input('Drop one folder at this script!\nhit <enter>')
+        quit()   
 
     path=(str(sys.argv[1]))
     if not os.path.isdir(path):
